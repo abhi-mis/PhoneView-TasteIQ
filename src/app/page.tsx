@@ -47,9 +47,18 @@ export default function Home() {
 
       const cameras = await Html5Qrcode.getCameras();
       if (cameras && cameras.length > 0) {
-        const camera = cameras[0];
+        // Try to find the back camera
+        const backCamera = cameras.find(camera => 
+          camera.label.toLowerCase().includes('back') || 
+          camera.label.toLowerCase().includes('rear') ||
+          camera.label.toLowerCase().includes('environment')
+        );
+        
+        // Use back camera if found, otherwise use the last camera (usually back on mobile)
+        const selectedCamera = backCamera || cameras[cameras.length - 1];
+        
         await html5QrCode.current.start(
-          camera.id,
+          selectedCamera.id,
           {
             fps: 10,
             qrbox: { width: 250, height: 250 },
@@ -169,7 +178,7 @@ export default function Home() {
           <DialogTrigger asChild>
             <Button 
               className="rounded-xl px-8 flex gap-2 bg-blue-600 hover:bg-blue-700"
-              onClick={() => setTimeout(startScanner, 500)} // Add delay before starting scanner
+              onClick={() => setTimeout(startScanner, 500)}
             >
               <Scan size={20} />
               Scan QR
