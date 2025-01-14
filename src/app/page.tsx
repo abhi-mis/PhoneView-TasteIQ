@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Scan, QrCode } from "lucide-react";
 import image1 from "@/public/1.png";
@@ -19,8 +19,7 @@ export default function Home() {
   const [scannedResult, setScannedResult] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const router = useRouter();
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
-  const scannerDivRef = useRef<HTMLDivElement>(null);
+  const html5QrCode = useRef<Html5Qrcode | null>(null);
 
   // Handle image carousel
   useEffect(() => {
@@ -33,77 +32,76 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  // Handle QR scanner
+  // Initialize QR scanner
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    if (showScanner && !scannerRef.current && scannerDivRef.current) {
-      // Add a small delay to ensure the DOM is ready
-      timeoutId = setTimeout(() => {
-        try {
-          setIsScanning(true);
-          const scanner = new Html5QrcodeScanner(
-            "qr-reader",
-            {
-              qrbox: {
-                width: 250,
-                height: 250,
-              },
-              fps: 5,
-              rememberLastUsedCamera: true,
-              showTorchButtonIfSupported: true,
-            },
-            /* verbose= */ false
-          );
-
-          scanner.render(onScanSuccess, onScanError);
-          scannerRef.current = scanner;
-        } catch (error) {
-          console.error("Failed to initialize scanner:", error);
-          setIsScanning(false);
-        }
-      }, 100);
+    if (showScanner && !html5QrCode.current) {
+      html5QrCode.current = new Html5Qrcode("qr-reader");
     }
 
     return () => {
-      clearTimeout(timeoutId);
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
-        setIsScanning(false);
+      if (html5QrCode.current && html5QrCode.current.isScanning) {
+        html5QrCode.current.stop().catch(console.error);
       }
     };
   }, [showScanner]);
 
-  const onScanSuccess = (decodedText: string) => {
+  const startScanner = async () => {
+    if (!html5QrCode.current) return;
+
+    try {
+      setIsScanning(true);
+      const cameras = await Html5Qrcode.getCameras();
+      if (cameras && cameras.length > 0) {
+        const camera = cameras[0];
+        await html5QrCode.current.start(
+          camera.id,
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          (decodedText) => {
+            handleQrCodeScan(decodedText);
+          },
+          (error) => {
+            console.warn(error);
+          }
+        );
+      } else {
+        console.error('No cameras found');
+        setIsScanning(false);
+      }
+    } catch (err) {
+      console.error('Error starting scanner:', err);
+      setIsScanning(false);
+    }
+  };
+
+  const handleQrCodeScan = (decodedText: string) => {
     setScannedResult(decodedText);
-    setIsScanning(false);
-    
-    // Handle URL redirection
     if (decodedText.startsWith('http')) {
-      // Add a small delay to show the scanned result before redirecting
       setTimeout(() => {
         window.location.href = decodedText;
       }, 1000);
     }
-    
-    if (scannerRef.current) {
-      scannerRef.current.clear().catch(console.error);
-      scannerRef.current = null;
-    }
   };
 
-  const onScanError = (error: string) => {
-    console.warn(error);
-  };
-
-  const handleScannerDialog = (open: boolean) => {
+  const handleScannerDialog = async (open: boolean) => {
     setShowScanner(open);
-    if (!open) {
-      setScannedResult("");
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
+    if (open) {
+      // Start scanning when dialog opens
+      setTimeout(() => {
+        startScanner();
+      }, 100);
+    } else {
+      // Stop scanning when dialog closes
+      if (html5QrCode.current && html5QrCode.current.isScanning) {
+        try {
+          await html5QrCode.current.stop();
+          setScannedResult("");
+          setIsScanning(false);
+        } catch (error) {
+          console.error("Failed to stop scanner:", error);
+        }
       }
     }
   };
@@ -193,9 +191,8 @@ export default function Home() {
             </DialogHeader>
             <div className="flex flex-col items-center">
               <div 
-                id="qr-reader" 
-                ref={scannerDivRef}
-                className="w-full max-w-sm mx-auto"
+                id="qr-reader"
+                className="w-full h-[300px] max-w-sm mx-auto overflow-hidden rounded-lg bg-gray-50"
               ></div>
               {scannedResult && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg w-full">
