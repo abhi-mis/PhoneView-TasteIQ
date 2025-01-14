@@ -32,24 +32,19 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  // Initialize QR scanner
-  useEffect(() => {
-    if (showScanner && !html5QrCode.current) {
-      html5QrCode.current = new Html5Qrcode("qr-reader");
-    }
-
-    return () => {
-      if (html5QrCode.current && html5QrCode.current.isScanning) {
-        html5QrCode.current.stop().catch(console.error);
-      }
-    };
-  }, [showScanner]);
-
   const startScanner = async () => {
-    if (!html5QrCode.current) return;
+    const qrReader = document.getElementById('qr-reader');
+    if (!qrReader) {
+      console.error('QR reader element not found');
+      return;
+    }
 
     try {
       setIsScanning(true);
+      if (!html5QrCode.current) {
+        html5QrCode.current = new Html5Qrcode('qr-reader');
+      }
+
       const cameras = await Html5Qrcode.getCameras();
       if (cameras && cameras.length > 0) {
         const camera = cameras[0];
@@ -87,21 +82,16 @@ export default function Home() {
 
   const handleScannerDialog = async (open: boolean) => {
     setShowScanner(open);
-    if (open) {
-      // Start scanning when dialog opens
-      setTimeout(() => {
-        startScanner();
-      }, 100);
-    } else {
-      // Stop scanning when dialog closes
-      if (html5QrCode.current && html5QrCode.current.isScanning) {
-        try {
+    if (!open && html5QrCode.current) {
+      try {
+        if (html5QrCode.current.isScanning) {
           await html5QrCode.current.stop();
-          setScannedResult("");
-          setIsScanning(false);
-        } catch (error) {
-          console.error("Failed to stop scanner:", error);
         }
+        html5QrCode.current = null;
+        setScannedResult("");
+        setIsScanning(false);
+      } catch (error) {
+        console.error("Failed to stop scanner:", error);
       }
     }
   };
@@ -177,7 +167,10 @@ export default function Home() {
         {/* QR Code Scanner Dialog */}
         <Dialog onOpenChange={handleScannerDialog}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl px-8 flex gap-2 bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="rounded-xl px-8 flex gap-2 bg-blue-600 hover:bg-blue-700"
+              onClick={() => setTimeout(startScanner, 500)} // Add delay before starting scanner
+            >
               <Scan size={20} />
               Scan QR
             </Button>
