@@ -1,13 +1,57 @@
+"use client";
 import InSearch from "@/components/common/InSearch";
 import PaymentMode from "@/components/payment/PaymentMode";
 import Total from "@/components/payment/Total";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
+import { toast } from "sonner";
 
-const Payment = () => {
+interface PaymentProps {
+  email: string;
+  otp: string;
+}
+
+const Payment = ({ email, otp }: PaymentProps) => {
   const router = useRouter();
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  const handlePlaceOrder = async () => {
+    const orderId = localStorage.getItem("orderId") || "";
+    
+    if (!orderId) {
+      toast.error("Order ID not found");
+      return;
+    }
+
+    setIsPlacingOrder(true);
+    try {
+      const response = await fetch("https://api-stg.tasteiq.in/api/assign_customer_to_order/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          email: email,
+          otp: otp
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to place order");
+      }
+
+      toast.success("Order placed successfully!");
+      router.push("/order-confirmation"); // Assuming you have an order confirmation page
+    } catch (error) {
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
@@ -15,7 +59,7 @@ const Payment = () => {
         <div className="relative flex p-3">
           <ShoppingBag size={25} />
           <span
-            className="bg-red-500 py-0 px-2 rounded-full absolute top-0 right-0 text-sm text-white"
+            className="bg-red-500 py-0 px-2 rounded-full absolute top-0 right-0 text-sm text-white cursor-pointer"
             onClick={() => router.push("/cart")}
           >
             1
@@ -33,7 +77,13 @@ const Payment = () => {
       <div className="absolute w-full left-0 right-0 bottom-0 p-6 gap-3 flex flex-col flex-1 bg-primary-foreground rounded-tr-[40px] rounded-tl-[40px]">
         <Total />
         <div className="flex justify-center">
-          <Button className="w-2/3">Pay</Button>
+          <Button 
+            className="w-2/3" 
+            onClick={handlePlaceOrder}
+            disabled={isPlacingOrder}
+          >
+            {isPlacingOrder ? "Processing..." : "Pay"}
+          </Button>
         </div>
       </div>
     </div>
