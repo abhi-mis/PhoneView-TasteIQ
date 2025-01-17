@@ -84,7 +84,7 @@ const DishTabs = () => {
 
   useEffect(() => {
     const fetchMenuItems = async () => {
-      const outletId = parseInt(localStorage.getItem("outlet") || "16", 10);
+      const outletId = parseInt(localStorage.getItem("outlet" || "16"), 10);
       const bearerToken = localStorage.getItem("bearerToken" || "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM3NDc5NDMzLCJpYXQiOjE3MzY2MTU0MzMsImp0aSI6IjkzZjk4OTkzNjlhZDQ0N2E4Y2Q2ZTJhOGM0MmI0YjlmIiwidXNlcl9pZCI6MTl9.hZmmJcORth1CxwXKP223LVppGkLLxbifNnMVQeFdqUk");
       const url = process.env.NEXT_PUBLIC_API_URL;
 
