@@ -3,6 +3,7 @@ import Navbar from "@/components/header/Navbar";
 import { usePathname, useRouter } from "next/navigation";
 import { ScrollText, ShoppingBag, ListOrdered } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCheckout } from "@/components/cart/CartList";  // Import the useCheckout hook
 
 export default function RootLayout({
   children,
@@ -11,12 +12,13 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const router = useRouter();
+  const { handleCheckout, loading } = useCheckout();
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (pathname === "/home") {
       router.push("/cart");
     } else if (pathname === "/cart") {
-      router.push("/checkout");
+      await handleCheckout();
     } else if (pathname === "/orders") {
       router.push("/home");
     }
@@ -60,6 +62,7 @@ export default function RootLayout({
                   : "w-full bg-green-500 hover:bg-green-800 rounded-3xl py-6 px-2 flex justify-evenly gap-3 shadow-lg"
               }
               onClick={handleClick}
+              disabled={loading}
             >
               {pathname === "/home" && (
                 <div className="rounded-full bg-foreground px-4 py-2">1</div>
@@ -68,7 +71,9 @@ export default function RootLayout({
                 ? "View Cart >>"
                 : pathname === "/orders"
                 ? "Order more >"
-                : "Checkout >"}
+                : loading 
+                  ? "Processing..." 
+                  : "Checkout >"}
             </Button>
           </div>
         )}

@@ -1,19 +1,16 @@
-import CartList from "@/components/cart/CartList";
-import InSearch from "@/components/common/InSearch";
-import RecomDishes from "@/components/home/RecomDishes";
-import React from "react";
+'use client';
 
-const page = () => {
+import CartList from '@/components/cart/CartList';
+
+export default function Home() {
   return (
-    <div className="flex flex-col h-full w-full p-4 gap-4">
-      <div className="flex flex-col flex-1 overflow-y-auto">
-        <CartList />
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <h2 className="text-xl font-bold mb-4">Your Cart</h2>
+          <CartList />
+        </div>
       </div>
-      <InSearch width="w-full" icon={false} placeholder="add instructions" />
-      <span className="text-sm font-medium">Recommended for you</span>
-      <RecomDishes/>
     </div>
   );
-};
-
-export default page;
+}

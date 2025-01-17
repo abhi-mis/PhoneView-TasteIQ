@@ -140,39 +140,8 @@ export default function Home() {
           <br /> everyone loves
         </span>
       </div>
-      
-      {/* QR Code Actions */}
-      <div className="flex gap-4">
-        {/* Generate QR Code Dialog */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="rounded-xl px-8 flex gap-2 bg-green-600 hover:bg-green-700">
-              <QrCode size={20} />
-              Show QR
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Scan this QR Code</DialogTitle>
-              <DialogDescription>
-                Use your mobile device to scan this QR code and access the current page.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col items-center p-6 bg-white rounded-lg">
-              <QRCodeSVG 
-                value={currentUrl} 
-                size={256}
-                level="H"
-                includeMargin
-                className="shadow-lg rounded-lg"
-              />
-              <p className="mt-4 text-sm text-gray-500 text-center">
-                Scan this QR code to visit the current page on another device
-              </p>
-            </div>
-          </DialogContent>
-        </Dialog>
 
+      <div className="flex gap-4">
         {/* QR Code Scanner Dialog */}
         <Dialog onOpenChange={handleScannerDialog}>
           <DialogTrigger asChild>
@@ -181,14 +150,14 @@ export default function Home() {
               onClick={() => setTimeout(startScanner, 500)}
             >
               <Scan size={20} />
-              Scan QR
+              Get Started by Scanning QR
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Scan a QR Code</DialogTitle>
+              <DialogTitle>Get Started</DialogTitle>
               <DialogDescription>
-                Use your device's camera to scan a QR code. Once scanned, you'll be redirected if it contains a URL.
+                Use your device's camera to scan a restaurant's QR code. Once scanned, you'll be redirected to the main page.
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center">
